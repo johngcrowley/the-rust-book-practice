@@ -130,7 +130,7 @@ impl Company {
         println!("Employees in {string}: {:?}", self.departments[string]);
     }
 
-    fn add_to_department(&mut self, dept: &str, emp: &str) {
+    fn add_to_department(&mut self, emp: &str, dept: &str) {
         self.departments
             .entry(dept.to_string())
             .or_insert(vec![])
@@ -152,6 +152,7 @@ fn company_interface() {
     // All Strings created in new() remain, their owner has moved to
     // the stack reference of the path, 'at'.
     let mut at = Company::new();
+
     let usage: &str = "Usage: get <department> | get company | add <employee> to <department>";
 
     loop {
@@ -180,35 +181,41 @@ fn company_interface() {
         let commands = command_book.len();
 
         if commands == 2 {
-            match command_book.get(&0) {
+            match command_book.get(&0).map(|x| x.as_str()) {
                 Some("add") => {
-                    at.add_department(command_book.get(&1).unwrap());
+                    at.add_department(command_book.get(&1).expect(&usage));
                 }
-                Some("get") => match command_book.get(&1) {
-                    Some("*") | Some("company") => {
+                Some("get") => match command_book.get(&1).map(|x| x.as_str()) {
+                    Some("company") => {
                         at.get_company();
                     }
-                    Some(m) => {
-                        at.get_department(command_book.get(m));
+                    _ => {
+                        at.get_department(command_book.get(&1).expect(&usage));
                     }
                 },
-                None => {
-                    panic!(usage);
+                _ => {
+                    panic!("{}", usage);
                 }
             }
         } else if commands == 4 {
-            match command_book.get(&0) {
-                Some("add") => match command_book.get(&2) {
+            match command_book.get(&0).map(|x| x.as_str()) {
+                Some("add") => match command_book.get(&2).map(|x| x.as_str()) {
                     Some("to") => {
-                        at.add_to_department(command_book.get(&1), command_book.get(&3));
+                        at.add_to_department(
+                            command_book.get(&1).expect(&usage),
+                            command_book.get(&3).expect(&usage),
+                        );
                     }
                     _ => {
-                        panic!(usage);
+                        panic!("{}", usage);
                     }
                 },
+                _ => {
+                    panic!("{}", usage);
+                }
             }
         } else {
-            panic!(usage);
+            panic!("{}", usage);
         }
     }
 }
